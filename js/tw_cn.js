@@ -113,6 +113,13 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       translateButtonObject.addEventListener('click', translatePage, false)
     }
+    rightMenuTranslateButtonObject = document.getElementById('menu-translate')
+    if (rightMenuTranslateButtonObject) {
+      if (currentEncoding !== targetEncoding) {
+        setTimeout(translateBody, translateDelay)
+      }
+      rightMenuTranslateButtonObject.addEventListener('click', translatePage, false)
+    }
   }
   translateInitialization()
   document.addEventListener('pjax:complete', translateInitialization)

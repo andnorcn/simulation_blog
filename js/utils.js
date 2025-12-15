@@ -59,6 +59,7 @@ const btf = {
   },
 
   snackbarShow: (text, showAction = false, duration = 2000) => {
+    document.styleSheets[0].addRule(':root', `--snackbar-time: ${duration / 1000}s;`)
     const { position, bgLight, bgDark } = GLOBAL_CONFIG.Snackbar
     const bg = document.documentElement.getAttribute('data-theme') === 'light' ? bgLight : bgDark
     Snackbar.show({
@@ -79,21 +80,31 @@ const btf = {
     const hour = minute * 60
     const day = hour * 24
     const month = day * 30
-    const { dateSuffix } = GLOBAL_CONFIG
 
-    if (!more) return parseInt(dateDiff / day)
+    let result
+    if (more) {
+      const monthCount = dateDiff / month
+      const dayCount = dateDiff / day
+      const hourCount = dateDiff / hour
+      const minuteCount = dateDiff / minute
 
-    const monthCount = dateDiff / month
-    const dayCount = dateDiff / day
-    const hourCount = dateDiff / hour
-    const minuteCount = dateDiff / minute
-
-    if (monthCount > 12) return datePost.toISOString().slice(0, 10)
-    if (monthCount >= 1) return `${parseInt(monthCount)} ${dateSuffix.month}`
-    if (dayCount >= 1) return `${parseInt(dayCount)} ${dateSuffix.day}`
-    if (hourCount >= 1) return `${parseInt(hourCount)} ${dateSuffix.hour}`
-    if (minuteCount >= 1) return `${parseInt(minuteCount)} ${dateSuffix.min}`
-    return dateSuffix.just
+      if (monthCount > 12) {
+        result = datePost.toISOString().slice(0, 10)
+      } else if (monthCount >= 1) {
+        result = parseInt(monthCount) + ' ' + GLOBAL_CONFIG.date_suffix.month
+      } else if (dayCount >= 1) {
+        result = parseInt(dayCount) + ' ' + GLOBAL_CONFIG.date_suffix.day
+      } else if (hourCount >= 1) {
+        result = parseInt(hourCount) + ' ' + GLOBAL_CONFIG.date_suffix.hour
+      } else if (minuteCount >= 1) {
+        result = parseInt(minuteCount) + ' ' + GLOBAL_CONFIG.date_suffix.min
+      } else {
+        result = GLOBAL_CONFIG.date_suffix.just
+      }
+    } else {
+      result = parseInt(dateDiff / day)
+    }
+    return result
   },
 
   loadComment: (dom, callback) => {
@@ -233,30 +244,7 @@ const btf = {
         Fancybox.bind('[data-fancybox]', {
           Hash: false,
           Thumbs: {
-            showOnStart: false
-          },
-          Images: {
-            Panzoom: {
-              maxScale: 4
-            }
-          },
-          Carousel: {
-            transition: 'slide'
-          },
-          Toolbar: {
-            display: {
-              left: ['infobar'],
-              middle: [
-                'zoomIn',
-                'zoomOut',
-                'toggle1to1',
-                'rotateCCW',
-                'rotateCW',
-                'flipX',
-                'flipY'
-              ],
-              right: ['slideshow', 'thumbs', 'close']
-            }
+            autoStart: false
           }
         })
         window.fancyboxRun = true
@@ -265,7 +253,7 @@ const btf = {
   },
 
   initJustifiedGallery: function (selector) {
-    const runJustifiedGallery = i => {
+    selector.forEach(function (i) {
       if (!btf.isHidden(i)) {
         fjGallery(i, {
           itemSelector: '.fj-gallery-item',
@@ -276,10 +264,7 @@ const btf = {
           }
         })
       }
-    }
-
-    if (Array.from(selector).length === 0) runJustifiedGallery(selector)
-    else selector.forEach(i => { runJustifiedGallery(i) })
+    })
   },
 
   updateAnchor: (anchor) => {
@@ -302,5 +287,85 @@ const btf = {
     const scrollPercentRounded = Math.round(scrollPercent * 100)
     const percentage = (scrollPercentRounded > 100) ? 100 : (scrollPercentRounded <= 0) ? 0 : scrollPercentRounded
     return percentage
+  },
+  
+  switchReadMode: function () { // read-mode
+    const $body = document.body
+    if ($body.classList.contains('read-mode')) {
+      $body.classList.remove('read-mode')
+      if (document.querySelector('#menu-readmode>span')) document.querySelector('#menu-readmode>span').innerHTML = '阅读模式'
+      btf.snackbarShow('已关闭阅读模式')
+      return
+    }
+    $body.classList.add('read-mode')
+    if (document.querySelector('#menu-readmode>span')) document.querySelector('#menu-readmode>span').innerHTML = '退出阅读'
+    btf.snackbarShow('已开启阅读模式')
+
+    // const newEle = document.createElement('button')
+    // newEle.type = 'button'
+    // newEle.className = 'fas fa-sign-out-alt exit-readmode'
+    // $body.appendChild(newEle)
+
+    // function clickFn () {
+    //   $body.classList.remove('read-mode')
+    //   newEle.remove()
+    //   newEle.removeEventListener('click', clickFn)
+    // }
+    // newEle.addEventListener('click', clickFn)
+  },
+
+  switchDarkMode: function () { // Switch Between Light And Dark Mode
+    const nowMode = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
+    if (nowMode === 'light') {
+      activateDarkMode()
+      saveToLocal.set('theme', 'dark', 2)
+      GLOBAL_CONFIG.Snackbar !== undefined && btf.snackbarShow(GLOBAL_CONFIG.Snackbar.day_to_night)
+    } else {
+      activateLightMode()
+      saveToLocal.set('theme', 'light', 2)
+      GLOBAL_CONFIG.Snackbar !== undefined && btf.snackbarShow(GLOBAL_CONFIG.Snackbar.night_to_day)
+    }
+    // handle some cases
+    typeof utterancesTheme === 'function' && utterancesTheme()
+    typeof FB === 'object' && window.loadFBComment()
+    window.DISQUS && document.getElementById('disqus_thread').children.length && setTimeout(() => window.disqusReset(), 200)
+  },
+
+  hideAsideBtn: function () { // Hide aside
+    const $htmlDom = document.documentElement.classList
+    if ($htmlDom.contains('hide-aside')) {
+      saveToLocal.set('aside-status', 'show', 2)
+      document.querySelector('#menu-hideside>span').innerHTML = '隐藏侧栏'
+      btf.snackbarShow('已显示侧边栏')
+    } else {
+      saveToLocal.set('aside-status', 'hide', 2)
+      document.querySelector('#menu-hideside>span').innerHTML = '显示侧栏'
+      btf.snackbarShow('已隐藏侧边栏')
+    }
+    $htmlDom.toggle('hide-aside')
+  },
+
+  adjustFontSize: function (plus) {
+    const fontSizeVal = parseInt(window.getComputedStyle(document.documentElement).getPropertyValue('--global-font-size'))
+    let newValue = ''
+    if (plus) {
+      if (fontSizeVal >= 20) return
+      newValue = fontSizeVal + 1
+      document.documentElement.style.setProperty('--global-font-size', newValue + 'px')
+      !document.getElementById('nav').classList.contains('hide-menu') && adjustMenu(true)
+    } else {
+      if (fontSizeVal <= 10) return
+      newValue = fontSizeVal - 1
+      document.documentElement.style.setProperty('--global-font-size', newValue + 'px')
+      document.getElementById('nav').classList.contains('hide-menu') && adjustMenu(true)
+    }
+
+    saveToLocal.set('global-font-size', newValue, 2)
+    // document.getElementById('font-text').innerText = newValue
+  },
+
+  copyFn: function (text) {
+    navigator.clipboard.writeText(text)
+    btf.snackbarShow(GLOBAL_CONFIG.copy.success)
   }
 }

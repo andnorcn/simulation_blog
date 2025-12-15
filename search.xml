@@ -20,9 +20,9 @@
       
         <tags>
             
-            <tag> Literatue Notes </tag>
-            
             <tag> EWD </tag>
+            
+            <tag> Literatue Notes </tag>
             
             <tag> Template </tag>
             
@@ -214,6 +214,33 @@
         <tags>
             
             <tag> 建站 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Butterfly 微博热搜侧边栏</title>
+      <link href="/post/38b005e1/"/>
+      <url>/post/38b005e1/</url>
+      
+        <content type="html"><![CDATA[<script type="text&#x2F;javascript" src="https://unpkg.com/kity@2.0.4/dist/kity.min.js"></script><script type="text&#x2F;javascript" src="https://unpkg.com/kityminder-core@1.4.50/dist/kityminder.core.min.js"></script><script defer="true" type="text&#x2F;javascript" src="https://unpkg.com/hexo-simple-mindmap@0.8.0/dist/mindmap.min.js"></script><link rel="stylesheet" type="text&#x2F;css" href="https://unpkg.com/hexo-simple-mindmap@0.8.0/dist/mindmap.min.css">]]></content>
+      
+      
+      <categories>
+          
+          <category> 魔改教程 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Hexo </tag>
+            
+            <tag> Butterfly </tag>
             
         </tags>
       
